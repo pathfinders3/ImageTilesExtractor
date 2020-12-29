@@ -1,0 +1,10 @@
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\bin\Debug\ImageTilesExtractor.exe.config
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\bin\Debug\ImageTilesExtractor.exe
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\bin\Debug\ImageTilesExtractor.pdb
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\obj\Debug\ImageTilesExtractor.csprojAssemblyReference.cache
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\obj\Debug\ImageTilesExtractor.Form1.resources
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\obj\Debug\ImageTilesExtractor.Properties.Resources.resources
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\obj\Debug\ImageTilesExtractor.csproj.GenerateResource.cache
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\obj\Debug\ImageTilesExtractor.csproj.CoreCompileInputs.cache
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\obj\Debug\ImageTilesExtractor.exe
+C:\Users\sywoo\source\repos\ImageTilesExtractor\ImageTilesExtractor\obj\Debug\ImageTilesExtractor.pdb
