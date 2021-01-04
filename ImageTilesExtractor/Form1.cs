@@ -108,10 +108,10 @@ namespace ImageTilesExtractor
 
             for (int y = 0; y < imgHeight; y++)
             {
-                int x = pos + (xp * 4) + (y * 4 * imgWidth);
+                int idx = pos + (xp * 4) + (y * 4 * imgWidth);
                 {
-                    int[] xy = ColorCalc.GetImageXYFromIndex(imgWidth, imgHeight, x);
-                    bool tf = ColorCalc.IsWhiteLike2(img[x + 2], img[x + 1], img[x]);
+                    int[] xy = ColorCalc.GetImageXYFromIndex(imgWidth, imgHeight, idx);
+                    bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
                     if (tf == false)
                     {
                         //int[] xy = ColorCalc.GetImageXYFromIndex(imgWidth, imgHeight, i);
@@ -156,9 +156,9 @@ namespace ImageTilesExtractor
                 if (!ColorCalc.IsIndexOk(idx, imgWidth, imgHeight))
                     return -1;
 
-                Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", xx, y1, yRev);
-                //Console.WriteLine("Evaluating Y1: BGR {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
-                Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx+2], img[idx + 1], img[idx]);
+                // COLOR CHECKING LOG PRINT.
+                //Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", xx, y1, yRev);
+                //Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx+2], img[idx + 1], img[idx]);
                 bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
 
                 if (tf)
@@ -167,63 +167,174 @@ namespace ImageTilesExtractor
                     que.Clear();
 
                 if (que.Count == 5)
-                    return y1 -5 ;  // 14/13/12/11/10 => 9 (is Picture Area's last Y)
+                    return y1-5;  // 14/13/12/11/10 => 9 (is Picture Area's last Y)
             }
 
             //return -1;
             return imgHeight;
         }
 
+        /// <summary>
+        /// e.g. It should be White, White, WHite, White, White (if confirm up for 5 whites)
+        /// if all whites : fine, some other colors: NG
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="imgWidth"></param>
+        /// <param name="imgHeight"></param>
+        /// <param name="xx"></param>
+        /// <param name="yy"></param>
+        /// <returns>successful and how many whites</returns>
+        int2 GoConfirmWhiteUp(byte[] img, int imgWidth, int imgHeight, int xx, int yy)
+        {
+            int2 ret = new int2();
+            ret.value = -1;
+            ret.fine = false;
+
+            Queue<int> que = new Queue<int>(5);
+
+            for (int y1 = yy; y1 >= ((yy-5 < 0) ? 0:yy-5); y1--)
+            {
+                int yRev = ColorCalc.GetRealY(y1, imgHeight);   // Actual Position in the Array
+                int idx = ColorCalc.GetValidIndex(imgWidth, imgHeight, xx, yRev);
+
+                if (idx > -1)
+                {
+                    bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
+                    if (tf)
+                        que.Enqueue(y1);
+                    else
+                    {
+                        ret.fine = false;
+                        ret.value = y1; // where the error met.
+                        return ret;
+                    }
+                }
+
+                if (que.Count == 5)
+                {
+                    ret.fine = true;
+                    ret.value = y1;  // 14/13/12/11/10 => 9 (is Picture Area's last Y)
+                    return ret;
+                }
+            }
+
+            return ret;
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// This is GoUpForWhite, whereas Non-White, Non-White, Non-White, and if found White, 4 strait White more.
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="imgWidth"></param>
+        /// <param name="imgHeight"></param>
+        /// <param name="xx"></param>
+        /// <param name="yy"></param>
+        /// <returns></returns>
         public int GoUpForWhite(byte[] img, int imgWidth, int imgHeight, int xx, int yy)
         {
             Queue<int> que = new Queue<int>(5);
 
-            Console.Write("Start YY: {0} | ", yy);
-
-            //for (int y1 = yy; y1 < imgHeight; y1++)
             for (int y1=yy; y1>=0; y1--)
             {
+                //int idx = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, xx, yRev);
+
                 int yRev = ColorCalc.GetRealY(y1, imgHeight);   // Actual Position in the Array
-                int idx = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, xx, yRev);
+                int idx = ColorCalc.GetValidIndex(imgWidth, imgHeight, xx, yRev);
 
-                // evaluate it if index is ok 
-                if (!ColorCalc.IsIndexOk(idx, imgWidth, imgHeight))
-                    return -1;
-
-                Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", xx, y1, yRev);
-                Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
-                bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
-
-                if (tf)
-                    que.Enqueue(y1);
+                if (idx > -1)
+                {
+                    bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
+                    if (tf)
+                        que.Enqueue(y1);
+                    else
+                        que.Clear();
+                }
                 else
-                    que.Clear();
+                {
 
-                if (que.Count == 5)
-                    return y1 + 5;  // 14/13/12/11/10 => 9 (is Picture Area's last Y)
+                }
+
+                //if (que.Count == 5)
+                //    return y1 + 5;  // 14/13/12/11/10 => 9 (is Picture Area's last Y)
             }
 
             //return -1;
             return 0;
         }
 
+
+        //public int GoUpForWhite(byte[] img, int imgWidth, int imgHeight, int xx, int yy)
+        //{
+        //    Queue<int> que = new Queue<int>(5);
+
+        //    Console.Write("Start YY: {0} | ", yy);
+
+        //    //for (int y1 = yy; y1 < imgHeight; y1++)
+        //    for (int y1 = yy; y1 >= 0; y1--)
+        //    {
+        //        int yRev = ColorCalc.GetRealY(y1, imgHeight);   // Actual Position in the Array
+        //        int idx = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, xx, yRev);
+
+        //        // evaluate it if index is ok 
+        //        if (!ColorCalc.IsIndexOk(idx, imgWidth, imgHeight))
+        //            return -1;
+
+        //        //Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", xx, y1, yRev);
+        //        //Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
+        //        bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
+
+        //        if (tf)
+        //            que.Enqueue(y1);
+        //        else
+        //            que.Clear();
+
+        //        if (que.Count == 5)
+        //            return y1 + 5;  // 14/13/12/11/10 => 9 (is Picture Area's last Y)
+        //    }
+
+        //    //return -1;
+        //    return 0;
+        //}
+
+
+        /// <summary>
+        /// Go Right until meet the end of x (width).
+        /// Non-white, white, white, white, white, white...
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="imgWidth"></param>
+        /// <param name="imgHeight"></param>
+        /// <param name="xx"></param>
+        /// <param name="yy"></param>
+        /// <returns></returns>
         public int GoRightForWhite(byte[] img, int imgWidth, int imgHeight, int xx, int yy)
         {
             Queue<int> que = new Queue<int>(5);
 
-            Console.Write("Start XX: {0} | ", xx);
+            Console.Write("Start_R XX: {0} | ", xx+1);
 
-            for (int x1 = xx; x1 < imgWidth; x1++)
+            // Check the Source Point, and iterate for the 5 whites.
+            int yRev = ColorCalc.GetRealY(yy, imgHeight);   // Actual Position in the Array
+            int idx0 = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, xx, yRev);
+            if (!ColorCalc.IsIndexOk(idx0, imgWidth, imgHeight))
+                return -1;
+            bool tf0 = ColorCalc.IsWhiteLike2(img[idx0 + 2], img[idx0 + 1], img[idx0]);
+            if (tf0)
+                return -1;  // if White-like, -1
+
+            for (int x1 = xx+1; x1 < imgWidth; x1++)
             {
-                int yRev = ColorCalc.GetRealY(yy, imgHeight);   // Actual Position in the Array
                 int idx = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, x1, yRev);
 
                 // evaluate it if index is ok 
                 if (!ColorCalc.IsIndexOk(idx, imgWidth, imgHeight))
                     return -1;
 
-                Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", x1, yRev, x1);
-                Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
+                //Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", x1, yRev, x1);
+                //Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
                 bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
 
                 if (tf)
@@ -255,9 +366,8 @@ namespace ImageTilesExtractor
                 if (!ColorCalc.IsIndexOk(idx, imgWidth, imgHeight))
                     return -1;
 
-                Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", x1, yRev, x1);
-                //Console.WriteLine("Evaluating Y1: BGR {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
-                Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
+                //Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", x1, yRev, x1);
+                //Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
                 bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
 
                 if (tf)
@@ -307,11 +417,20 @@ namespace ImageTilesExtractor
             public int value; // value
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="imgWidth"></param>
+        /// <param name="imgHeight"></param>
+        /// <param name="xx"></param>
+        /// <param name="yy"></param>
+        /// <returns>fine : background colors all around, NG: some foreground colors. value: position to re-start</returns>
         int2 TryGoRight(byte[] img, int imgWidth, int imgHeight, int xx, int yy)
         {   //(g_imgArray, g_image.Width, g_image.Height, e.X, e.Y);
             int2 ret = new int2();
 
-            ret.fine = false;
+            ret.fine = true;
             ret.value = -1;
 
             int right = GoRightForWhite(img, imgWidth, imgHeight, xx, yy);
@@ -323,19 +442,34 @@ namespace ImageTilesExtractor
                 return ret;
             }
 
-            // IS IT REAL RIGHT? CHECK VERTICALLY, UP AND DOWN
-            int v1 = GoUpForWhite(img, imgWidth, imgHeight, right, yy);
-            if (v1 == 0)
+            Console.WriteLine("Clicked X:{0}, RIght:{1}", xx, right);
+            // IS IT REAL RIGHT? CHECK VERTICALLY, UP AND DOWN (Try 3 times. i<3)
+            for (int i=0; i<3; i++)
             {
-                ret.fine = false;
-                return ret;
-            }
+                int2 v1 = GoConfirmWhiteUp(img, imgWidth, imgHeight, right, yy);
+                if (v1.fine)
+                {
+                    ret.value = right;  // position to re-start
+                    ret.fine = true;   // it has foreground.
+                    return ret;
+                }
+                else   // if met some foreground colors (black, red...).
+                {
+                    ret.value = right;  // position to re-start
+                    ret.fine = false;   // it has foreground.
+                }
 
-            int v2 = GoDownForWhite(img, imgWidth, imgHeight, right, yy);
-            if (v2 == imgHeight)
-            {
-                ret.fine = false;
-                return ret;
+                Console.Write("old right...{0}, ", right);
+                // get a new right (to slightly move index by plus one)
+                right = GoRightForWhite(img, imgWidth, imgHeight, right+1, yy);
+                Console.WriteLine("new right...{0}", right);
+                
+                if (-1 == right)
+                {   // IF NO MORE RIGHT 
+                    ret.fine = false;
+                    ret.value = -1;
+                    return ret;
+                }
             }
 
             return ret;
