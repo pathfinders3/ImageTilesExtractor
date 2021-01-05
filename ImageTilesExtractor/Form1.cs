@@ -266,38 +266,38 @@ namespace ImageTilesExtractor
         }
 
 
-        //public int GoUpForWhite(byte[] img, int imgWidth, int imgHeight, int xx, int yy)
-        //{
-        //    Queue<int> que = new Queue<int>(5);
+        /// <summary>
+        /// xx should be 'white' (start position should be)
+        /// finding a new right(x) of non-white
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="imgWidth"></param>
+        /// <param name="imgHeight"></param>
+        /// <param name="xx"></param>
+        /// <param name="yy"></param>
+        /// <returns></returns>
+        public int GoRightForFore(byte[] img, int imgWidth, int imgHeight, int xx, int yy)
+        {
+            int yRev = ColorCalc.GetRealY(yy, imgHeight);   // Actual Position in the Array
+            //int idx0 = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, xx, yRev);
+            //if (!ColorCalc.IsIndexOk(idx0, imgWidth, imgHeight))
+            //    return -1;
+            //bool tf0 = ColorCalc.IsWhiteLike2(img[idx0 + 2], img[idx0 + 1], img[idx0]);
+            //if (!tf0)
+            //    return -1;  // if Not White-like, there is a problem because, it should find the first non-white.
 
-        //    Console.Write("Start YY: {0} | ", yy);
+            for (int i=xx; i<imgWidth; i++)
+            {
+                int idx = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, i, yRev);
 
-        //    //for (int y1 = yy; y1 < imgHeight; y1++)
-        //    for (int y1 = yy; y1 >= 0; y1--)
-        //    {
-        //        int yRev = ColorCalc.GetRealY(y1, imgHeight);   // Actual Position in the Array
-        //        int idx = ColorCalc.GetIndexFromXY(imgWidth, imgHeight, xx, yRev);
+                bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx+ 1], img[idx]);
+                if (!tf)
+                    return i;   // new x value (new right position of non-white to re-start for 5 whites)
+            }
 
-        //        // evaluate it if index is ok 
-        //        if (!ColorCalc.IsIndexOk(idx, imgWidth, imgHeight))
-        //            return -1;
+            return -1;
+        }
 
-        //        //Console.Write("(X,Y) ({0}, {1}='{2}') (OnlyFirstLineEffective)", xx, y1, yRev);
-        //        //Console.WriteLine("Evaluating Y1: RGB {0}, {1}, {2}", img[idx + 2], img[idx + 1], img[idx]);
-        //        bool tf = ColorCalc.IsWhiteLike2(img[idx + 2], img[idx + 1], img[idx]);
-
-        //        if (tf)
-        //            que.Enqueue(y1);
-        //        else
-        //            que.Clear();
-
-        //        if (que.Count == 5)
-        //            return y1 + 5;  // 14/13/12/11/10 => 9 (is Picture Area's last Y)
-        //    }
-
-        //    //return -1;
-        //    return 0;
-        //}
 
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace ImageTilesExtractor
                 return ret;
             }
 
-            Console.WriteLine("Clicked X:{0}, RIght:{1}", xx, right);
+            Console.WriteLine("445: Clicked X:{0}, RIght(from clicked):{1}", xx, right);
             // IS IT REAL RIGHT? CHECK VERTICALLY, UP AND DOWN (Try 3 times. i<3)
             for (int i=0; i<3; i++)
             {
@@ -459,16 +459,20 @@ namespace ImageTilesExtractor
                     ret.fine = false;   // it has foreground.
                 }
 
+                //// NON-EFFECTIVE RIGHT X, BECAUSE OF SOME TOP-DOWN NON-WHITES
                 Console.Write("old right...{0}, ", right);
-                // get a new right (to slightly move index by plus one)
-                right = GoRightForWhite(img, imgWidth, imgHeight, right+1, yy);
-                Console.WriteLine("new right...{0}", right);
-                
-                if (-1 == right)
-                {   // IF NO MORE RIGHT 
-                    ret.fine = false;
+
+                right = GoRightForFore(img, imgWidth, imgHeight, right + 1, yy);
+                Console.WriteLine(" new right : {0}", right);
+                if (right == -1)
+                {
+                    ret.fine = false; // because no fore any more
                     ret.value = -1;
                     return ret;
+                }
+                else
+                {
+                    //Console.WriteLine(" new right : {0}", right);
                 }
             }
 
